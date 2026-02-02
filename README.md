@@ -7,6 +7,7 @@ FormSaver is a Chrome extension that allows users to save and restore form data 
 - **Save Form Data**: Right-click anywhere on a page with forms to save all form field values
 - **Restore Form Data**: Restore previously saved form data to the same URL
 - **Popup Interface**: Simple popup UI to manually save/restore form data
+- **Options Page**: Customizable settings for the extension
 - **Automatic Field Detection**: Automatically detects and saves input fields, textareas, and select elements
 - **URL-Based Storage**: Saves form data linked to the specific URL where it was captured
 
@@ -40,6 +41,16 @@ To restore form data:
 2. Click "Save Current Form" to save the current form data
 3. Click "Restore Saved Form" to populate the page with saved data
 
+### Method 3: Options Page
+
+1. Right-click the FormSaver extension icon in the toolbar
+2. Select "Options" from the context menu
+3. Configure settings like:
+   - Auto-save functionality
+   - Password field exclusion
+   - Notification settings
+   - Data management options
+
 ## Technical Details
 
 ### Files Structure
@@ -50,6 +61,8 @@ To restore form data:
 - `src/contextMenu.ts`: Manages the right-click context menu functionality
 - `popup/popup.html`: HTML for the extension popup
 - `popup/popup.js`: JavaScript for the popup UI
+- `options/options.html`: HTML for the options page
+- `options/options.js`: JavaScript for the options page
 - `assets/`: Contains extension icons
 
 ### Permissions
