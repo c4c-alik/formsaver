@@ -3,16 +3,28 @@
   "version": "1.0.0",
   "description": "A Chrome extension to save form data based on URL for later retrieval",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
-    "zip": "npm run build && zip -r formsaver-extension.zip dist manifest.json popup assets README.md"
+    "zip": "npm run build && zip -r formsaver-extension.zip dist manifest.json popup assets README.md",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.{ts,js,json}",
+    "format:check": "prettier --check src/**/*.{ts,js,json}"
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/chrome": "^0.0.268",
-    "typescript": "^5.5.3"
+    "@types/chrome": "0.0.268",
+    "@typescript-eslint/eslint-plugin": "7.16.0",
+    "@typescript-eslint/parser": "7.16.0",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-prettier": "5.2.1",
+    "prettier": "3.3.3",
+    "typescript": "5.5.3",
+    "typescript-eslint": "8.22.0"
   },
   "private": true
 }
