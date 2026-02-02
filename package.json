@@ -1,13 +1,17 @@
 {
   "name": "formsaver",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Chrome extension to save form data based on URL for later retrieval",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "zip": "npm run build && zip -r formsaver-extension.zip dist manifest.json popup assets README.md"
   },
   "dependencies": {},
   "devDependencies": {
+    "@types/chrome": "^0.0.268",
     "typescript": "^5.5.3"
   },
   "private": true

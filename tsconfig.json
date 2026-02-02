@@ -6,7 +6,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["dom", "es2016"],
+    "types": ["chrome"]
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }
