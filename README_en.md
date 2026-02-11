@@ -52,7 +52,7 @@ formsaver/
 │   ├── formRestorer.ts    # 表单数据恢复器
 │   ├── storageManager.ts  # 存储管理器
 │   ├── background.ts      # 后台服务工作者
-│   └── content.ts         # 内容脚本
+│   └── background.ts         # 内容脚本
 ├── popup/                 # 弹出窗口
 │   ├── popup.html
 │   └── popup.js

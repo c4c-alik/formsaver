@@ -5,15 +5,13 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "clean": "Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue",
-    "copy-manifest": "node scripts/copy-files.js manifest.json dist/manifest.json",
-    "zip": "npm run build && npm run copy-manifest && rimraf formsaver-extension.zip && jszip-cli add dist/* -o formsaver-extension.zip",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.{ts,js,json}",
-    "format:check": "prettier --check src/**/*.{ts,js,json}",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/**/*.{ts,vue}",
+    "lint:fix": "eslint src/**/*.{ts,vue} --fix",
+    "format": "prettier --write src/**/*.{ts,js,json,vue}",
+    "format:check": "prettier --check src/**/*.{ts,js,json,vue}",
     "prepare": "husky",
     "pre-commit": "lint-staged"
   },
@@ -24,7 +22,7 @@
     ]
   },
   "devDependencies": {
-    "@types/chrome": "0.0.268",
+    "@types/chrome": "^0.0.268",
     "@typescript-eslint/eslint-plugin": "7.16.0",
     "@typescript-eslint/parser": "7.16.0",
     "eslint": "8.57.0",
@@ -36,5 +34,10 @@
     "typescript": "5.5.3",
     "typescript-eslint": "8.22.0"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.4",
+    "vite": "^7.3.1",
+    "vue": "^3.5.28"
+  }
 }

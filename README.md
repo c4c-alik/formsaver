@@ -30,6 +30,7 @@ FormSaver is a Chrome extension that allows users to save and restore form data 
 5. The form data is now saved and linked to the current URL
 
 To restore form data:
+
 1. Navigate back to the same URL where you saved the form
 2. Right-click anywhere on the page
 3. Select "Restore Saved Form Data" from the context menu
@@ -57,7 +58,7 @@ To restore form data:
 
 - `manifest.json`: Chrome extension configuration file
 - `src/background.ts`: Handles form data storage and context menu
-- `src/content.ts`: Runs on web pages to interact with forms
+- `src/background.ts`: Runs on web pages to interact with forms
 - `src/contextMenu.ts`: Manages the right-click context menu functionality
 - `popup/popup.html`: HTML for the extension popup
 - `popup/popup.js`: JavaScript for the popup UI

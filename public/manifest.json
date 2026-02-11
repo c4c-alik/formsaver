@@ -3,7 +3,7 @@
   "name": "FormSaver",
   "version": "1.0.0",
   "description": "智能表单数据保存和恢复工具",
-  "permissions": ["storage", "unlimitedStorage ", "activeTab", "contextMenus", "notifications"],
+  "permissions": ["storage", "unlimitedStorage", "activeTab", "contextMenus", "notifications"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
@@ -15,10 +15,10 @@
     }
   ],
   "action": {
-    "default_popup": "popup/popup.html",
+    "default_popup": "popup.html",
     "default_title": "FormSaver"
   },
-  "options_page": "options/options.html",
+  "options_page": "options.html",
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",

@@ -30,6 +30,7 @@ FormSaver 是一款 Chrome 浏览器扩展程序，允许用户根据网页 URL 
 5. 表单数据现已保存并与当前 URL 关联
 
 恢复表单数据：
+
 1. 返回到保存表单时的相同 URL
 2. 在页面任意位置右键单击
 3. 从上下文菜单中选择"恢复已保存的表单数据"
@@ -57,7 +58,7 @@ FormSaver 是一款 Chrome 浏览器扩展程序，允许用户根据网页 URL 
 
 - `manifest.json`: Chrome 扩展配置文件
 - `src/background.ts`: 处理表单数据存储和上下文菜单
-- `src/content.ts`: 在网页上运行以与表单交互
+- `src/background.ts`: 在网页上运行以与表单交互
 - `src/contextMenu.ts`: 管理右键上下文菜单功能
 - `popup/popup.html`: 扩展弹窗的 HTML
 - `popup/popup.js`: 弹窗界面的 JavaScript

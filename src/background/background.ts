@@ -1,5 +1,5 @@
-import { Message } from './types';
-import { StorageManager } from './storageManager';
+import { Message } from '../content/types';
+import { StorageManager } from '../content/storageManager';
 
 // 监听来自content script的消息
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
