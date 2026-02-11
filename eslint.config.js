@@ -15,24 +15,24 @@ export default tsPlugin.config(
       ecmaVersion: 2023,
       sourceType: 'module',
       globals: {
-        chrome: 'readonly'
-      }
+        chrome: 'readonly',
+      },
     },
     rules: {
-      'indent': ['error', 2],
-      'linebreak-style': ['error', 'unix'],
-      'quotes': ['error', 'single'],
-      'semi': ['error', 'always'],
+      // 'indent': ['error', 2],  // Disabled due to conflict with Prettier
+      // 'linebreak-style': ['error', 'unix'],  // Disabled due to conflict with Prettier
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off'
+      '@typescript-eslint/ban-ts-comment': 'off',
     },
     files: ['src/**/*.ts'],
     ignores: ['dist/**', 'node_modules/**', '*.json'],
     linterOptions: {
-      reportUnusedDisableDirectives: 'error'
-    }
+      reportUnusedDisableDirectives: 'error',
+    },
   }
 );

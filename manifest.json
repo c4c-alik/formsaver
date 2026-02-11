@@ -2,22 +2,16 @@
   "manifest_version": 3,
   "name": "FormSaver",
   "version": "1.0.0",
-  "description": "Save form data based on URL for later retrieval",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "contextMenus"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "description": "智能表单数据保存和恢复工具",
+  "permissions": ["storage", "unlimitedStorage ", "activeTab", "contextMenus", "notifications"],
+  "host_permissions": ["<all_urls>"],
   "background": {
-    "service_worker": "dist/background.js"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/content.js"]
+      "js": ["content.js"]
     }
   ],
   "action": {

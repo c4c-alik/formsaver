@@ -1,0 +1,95 @@
+{
+  "version": "1.0",
+  "forms": {
+    "https://example.com/apply": {
+      "id": "form_123",
+      "name": "工作申请表单",
+      "url": "https://example.com/apply",
+      "savedAt": "2024-03-15T10:30:00Z",
+      "formFields": [
+        {
+          "type": "text",
+          "value": "张三",
+          "attributes": {
+            "type": "text",
+            "name": "full_name"
+          },
+          "metadata": {
+            "label": "姓名"
+          },
+          "selectors": {
+            "primary": "input[name\u003d\u0027full_name\u0027]"
+          }
+        },
+        {
+          "type": "email",
+          "value": "zhangsan@example.com",
+          "attributes": {
+            "type": "email",
+            "name": "email"
+          },
+          "metadata": {
+            "label": "邮箱"
+          },
+          "selectors": {
+            "primary": "input[name\u003d\u0027email\u0027]"
+          }
+        },
+        {
+          "type": "select-one",
+          "value": "developer",
+          "attributes": {
+            "name": "position"
+          },
+          "options": [
+            {
+              "value": "manager",
+              "text": "项目经理",
+              "selected": false
+            },
+            {
+              "value": "developer",
+              "text": "开发工程师",
+              "selected": true
+            },
+            {
+              "value": "designer",
+              "text": "设计师",
+              "selected": false
+            }
+          ],
+          "metadata": {
+            "label": "申请职位"
+          },
+          "selectors": {
+            "primary": "select[name\u003d\u0027position\u0027]"
+          }
+        },
+        {
+          "type": "checkbox",
+          "value": true,
+          "attributes": {
+            "type": "checkbox",
+            "name": "agree_terms"
+          },
+          "metadata": {
+            "label": "同意条款"
+          },
+          "selectors": {
+            "primary": "input[name\u003d\u0027agree_terms\u0027]"
+          }
+        }
+      ],
+      "formInfo": {
+        "totalFields": 8,
+        "filledFields": 4,
+        "fieldTypes": {
+          "text": 2,
+          "email": 1,
+          "select": 1,
+          "checkbox": 1
+        }
+      }
+    }
+  }
+}

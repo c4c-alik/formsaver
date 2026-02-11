@@ -7,8 +7,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "zip": "npm run build && zip -r formsaver-extension.zip dist manifest.json popup assets README.md",
+    "clean": "Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue",
+    "copy-manifest": "node scripts/copy-files.js manifest.json dist/manifest.json",
+    "zip": "npm run build && npm run copy-manifest && rimraf formsaver-extension.zip && jszip-cli add dist/* -o formsaver-extension.zip",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.{ts,js,json}",
@@ -22,7 +23,6 @@
       "eslint --fix"
     ]
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/chrome": "0.0.268",
     "@typescript-eslint/eslint-plugin": "7.16.0",
