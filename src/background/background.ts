@@ -1,31 +1,6 @@
 import { StorageManager } from '../content/storageManager';
 import { Message } from '../content/types';
 
-// Listen for messages from content scripts and injected functions
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.type) {
-    case 'SHOW_NOTIFICATION':
-      showExtensionNotification(message.message, message.notificationType);
-      break;
-
-    // Handle other message types...
-    case 'GET_SAVED_FORMS':
-      handleGetSavedForms(message, sender, sendResponse);
-      return true; // Keep message channel open for async response
-
-    case 'DELETE_FORM':
-      handleDeleteForm(message, sender, sendResponse);
-      return true;
-
-    default:
-      // Handle unknown message types
-      sendResponse({ success: false, error: 'Unknown message type' });
-  }
-
-  // For SHOW_NOTIFICATION, we don't need to send a response
-  return false;
-});
-
 // Initialize when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('FormSaver extension installed');
@@ -62,6 +37,31 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       chrome.runtime.openOptionsPage();
       break;
   }
+});
+
+// Listen for messages from content scripts and injected functions
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  switch (message.type) {
+    case 'SHOW_NOTIFICATION':
+      showExtensionNotification(message.message, message.notificationType);
+      break;
+
+    // Handle other message types...
+    case 'GET_SAVED_FORMS':
+      handleGetSavedForms(message, sender, sendResponse);
+      return true; // Keep message channel open for async response
+
+    case 'DELETE_FORM':
+      handleDeleteForm(message, sender, sendResponse);
+      return true;
+
+    default:
+      // Handle unknown message types
+      sendResponse({ success: false, error: 'Unknown message type' });
+  }
+
+  // For SHOW_NOTIFICATION, we don't need to send a response
+  return false;
 });
 
 // Check for saved forms when tab updates
