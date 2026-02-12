@@ -1,27 +1,6 @@
 import { StorageManager } from '../content/storageManager';
 import { Message } from '../content/types';
 
-// Extension notification function - for background context only
-function showExtensionNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  // Only show extension-level notifications for actual extension errors
-  // Page-level notifications should be handled in content scripts
-  if (type === 'error') {
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'assets/icon48.png',
-      title: 'FormSaver Error',
-      message: message,
-    });
-  } else {
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'assets/icon48.png',
-      title: 'FormSaver',
-      message: message,
-    });
-  }
-}
-
 // Listen for messages from content scripts and injected functions
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
@@ -105,6 +84,27 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
   }
 });
+
+// Extension notification function - for background context only
+function showExtensionNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  // Only show extension-level notifications for actual extension errors
+  // Page-level notifications should be handled in content scripts
+  if (type === 'error') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'assets/icon48.png',
+      title: 'FormSaver Error',
+      message: message,
+    });
+  } else {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'assets/icon48.png',
+      title: 'FormSaver',
+      message: message,
+    });
+  }
+}
 
 /**
  * Handle get saved forms list request
