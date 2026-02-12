@@ -50,6 +50,7 @@ export default tsPlugin.config(
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        console: 'readonly',
       },
     },
   }
