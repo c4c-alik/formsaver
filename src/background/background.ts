@@ -16,11 +16,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 
   // 迁移旧数据
   await StorageManager.migrateData();
-
-  // 创建通知权限
-  chrome.permissions.request({
-    permissions: ['notifications'],
-  });
 });
 
 // 标签页更新时检查是否有保存的表单
