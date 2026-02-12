@@ -1,5 +1,5 @@
 import { FormData, FormField } from './types';
-import { showNotification } from './utils';
+import { showNotification } from '../composables/notify';
 
 export class FormRestorer {
   /**

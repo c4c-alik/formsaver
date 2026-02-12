@@ -1,25 +1,30 @@
-import { Message } from '../content/types';
 import { StorageManager } from '../content/storageManager';
+import { showNotification } from '../composables/notify';
+import { Message } from '../content/types';
 
-// Extension notification function - for background context only
-function showExtensionNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  // Only show extension-level notifications for actual extension errors
-  // Page-level notifications should be handled in content scripts
-  if (type === 'error') {
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'assets/icon48.png',
-      title: 'FormSaver Error',
-      message: message,
-    });
+// Listen for messages from content scripts and injected functions
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  switch (message.type) {
+    case 'SHOW_NOTIFICATION':
+      showExtensionNotification(message.message, message.notificationType);
+      break;
+
+    // Handle other message types...
+    case 'GET_SAVED_FORMS':
+      handleGetSavedForms(message, sender, sendResponse);
+      return true; // Keep message channel open for async response
+
+    case 'DELETE_FORM':
+      handleDeleteForm(message, sender, sendResponse);
+      return true;
+
+    default:
+      // Handle unknown message types
+      sendResponse({ success: false, error: 'Unknown message type' });
   }
-  // For success/info messages, rely on content script notifications
-}
 
-// Listen for messages from content script
-chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
-  handleMessage(message, sender, sendResponse);
-  return true;
+  // For SHOW_NOTIFICATION, we don't need to send a response
+  return false;
 });
 
 // Initialize when extension is installed
@@ -94,32 +99,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-async function handleMessage(
-  message: Message,
-  sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
-) {
-  try {
-    switch (message.type) {
-      case 'GET_SAVED_FORMS':
-        await handleGetSavedForms(message, sender, sendResponse);
-        break;
-
-      case 'DELETE_FORM':
-        await handleDeleteForm(message, sender, sendResponse);
-        break;
-
-      default:
-        sendResponse({ success: false, error: 'Unknown message type' });
-    }
-  } catch (error) {
-    console.error('Error handling message:', error);
-    // Use unified notification method
-    showExtensionNotification(`Error handling message: ${(error as Error).message}`, 'error');
-    sendResponse({ success: false, error: (error as Error).message });
-  }
-}
-
 /**
  * Handle get saved forms list request
  */
@@ -182,8 +161,8 @@ function saveFormDirect() {
     // Collect form data directly
     const forms = document.querySelectorAll('form');
     if (forms.length === 0) {
-      // Directly call background notification function
-      showExtensionNotification('No forms found on current page', 'error');
+      // Use unified notification method
+      showNotification('No forms found on current page', 'error');
       return;
     }
 
@@ -207,29 +186,29 @@ function saveFormDirect() {
       }
     });
 
-    // Save to chrome storage and show notification directly
+    // Save to chrome storage and notify using unified method
     chrome.storage.local
       .set({ [`form_${window.location.href}`]: formData })
       .then(() => {
-        showExtensionNotification('Form saved successfully!', 'success');
+        showNotification('Form saved successfully!', 'success');
       })
       .catch((error: any) => {
-        showExtensionNotification(`Save failed: ${error.message}`, 'error');
+        showNotification(`Save failed: ${error.message}`, 'error');
       });
   } catch (error: any) {
-    showExtensionNotification(`Save failed: ${error.message}`, 'error');
+    showNotification(`Save failed: ${error.message}`, 'error');
   }
 }
 
 function restoreFormDirect() {
   try {
-    // Get saved form data and show notification directly
+    // Get saved form data and notify using unified method
     chrome.storage.local
       .get([`form_${window.location.href}`])
       .then(result => {
         const savedData = result[`form_${window.location.href}`];
         if (!savedData) {
-          showExtensionNotification('No saved form data found', 'error');
+          showNotification('No saved form data found', 'error');
           return;
         }
 
@@ -243,13 +222,13 @@ function restoreFormDirect() {
           }
         });
 
-        showExtensionNotification('Form restored successfully!', 'success');
+        showNotification('Form restored successfully!', 'success');
       })
       .catch((error: any) => {
-        showExtensionNotification(`Restore failed: ${error.message}`, 'error');
+        showNotification(`Restore failed: ${error.message}`, 'error');
       });
   } catch (error: any) {
-    showExtensionNotification(`Restore failed: ${error.message}`, 'error');
+    showNotification(`Restore failed: ${error.message}`, 'error');
   }
 }
 
@@ -286,4 +265,19 @@ async function createContextMenu() {
     title: 'Manage Saved Forms',
     contexts: ['page'],
   });
+}
+
+// Extension notification function - for background context only
+function showExtensionNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  // Only show extension-level notifications for actual extension errors
+  // Page-level notifications should be handled in content scripts
+  if (type === 'error') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'assets/icon48.png',
+      title: 'FormSaver Error',
+      message: message,
+    });
+  }
+  // For success/info messages, rely on content script notifications
 }

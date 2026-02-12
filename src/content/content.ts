@@ -2,7 +2,7 @@ import { Message } from './types';
 import { FormCollector } from './formCollector';
 import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
-import { showNotification } from './utils';
+import { showNotification } from '../composables/notify';
 
 /**
  * Initialize after page load completes
