@@ -18,6 +18,44 @@ chrome.runtime.onInstalled.addListener(async () => {
   await StorageManager.migrateData();
 });
 
+// 监听右键菜单点击
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!tab?.id) return;
+
+  switch (info.menuItemId) {
+    case 'save-form':
+      sendMessageToContentScript(tab.id, { type: 'SAVE_FORM' })
+        .then(response => {
+          console.log('Content script保存响应:', response);
+        })
+        .catch(error => {
+          console.error('发送保存表单消息失败:', error);
+          // 显示通知给用户
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'assets/icon48.png',
+            title: 'FormSaver',
+            message: '无法保存表单：页面可能不支持或正在加载中',
+          });
+        });
+      break;
+    case 'restore-form':
+      sendMessageToContentScript(tab.id, { type: 'RESTORE_FORM' }).catch(error => {
+        console.error('发送恢复表单消息失败:', error);
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'assets/icon48.png',
+          title: 'FormSaver',
+          message: '无法恢复表单：页面可能不支持或正在加载中',
+        });
+      });
+      break;
+    case 'manage-forms':
+      chrome.runtime.openOptionsPage();
+      break;
+  }
+});
+
 // 标签页更新时检查是否有保存的表单
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
@@ -34,29 +72,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     } catch (error) {
       console.error('检查保存表单时出错:', error);
     }
-  }
-});
-
-// 监听右键菜单点击
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (!tab?.id) return;
-
-  switch (info.menuItemId) {
-    case 'save-form':
-      chrome.tabs.sendMessage(tab.id, { type: 'SAVE_FORM' }, response => {
-        if (chrome.runtime.lastError) {
-          console.error('发送保存表单消息失败:', chrome.runtime.lastError);
-        } else {
-          console.log('Content script保存响应:', response);
-        }
-      });
-      break;
-    case 'restore-form':
-      chrome.tabs.sendMessage(tab.id, { type: 'RESTORE_FORM' });
-      break;
-    case 'manage-forms':
-      chrome.runtime.openOptionsPage();
-      break;
   }
 });
 
@@ -139,6 +154,53 @@ async function handleDeleteForm(
 /**
  * 创建右键菜单
  */
+/**
+ * 向内容脚本发送消息的封装函数，包含错误处理和重试机制
+ */
+async function sendMessageToContentScript(
+  tabId: number,
+  message: any,
+  maxRetries = 3
+): Promise<any> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // 检查标签页是否存在且可访问
+      const tab = await chrome.tabs.get(tabId);
+      if (!tab || !tab.url) {
+        throw new Error('标签页不存在或URL无效');
+      }
+
+      // 尝试发送消息
+      const response = await new Promise((resolve, reject) => {
+        chrome.tabs.sendMessage(tabId, message, response => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else {
+            resolve(response);
+          }
+        });
+      });
+
+      return response;
+    } catch (error) {
+      const errorMessage = (error as Error).message;
+
+      // 如果是连接错误且还有重试机会
+      if (errorMessage.includes('Could not establish connection') && attempt < maxRetries) {
+        console.warn(`第${attempt}次尝试发送消息失败，等待后重试...`, errorMessage);
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        continue;
+      }
+
+      // 其他错误或重试次数用完
+      throw error;
+    }
+  }
+
+  throw new Error('达到最大重试次数，无法建立连接');
+}
+
 async function createContextMenu() {
   // 移除现有的上下文菜单项
   chrome.contextMenus.removeAll();

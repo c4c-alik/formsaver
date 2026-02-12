@@ -3,6 +3,9 @@ import { FormCollector } from './formCollector';
 import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
 
+console.log('🎯 Content script 已注入到页面:', window.location.href);
+console.log('扩展ID:', chrome.runtime.id);
+
 // 监听来自background script的消息
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
   handleMessage(message, sender, sendResponse);
@@ -14,6 +17,11 @@ async function handleMessage(
   sender: chrome.runtime.MessageSender,
   sendResponse: (response?: any) => void
 ) {
+  // 基本验证
+  if (!message || !message.type) {
+    sendResponse({ success: false, error: '无效的消息格式' });
+    return;
+  }
   try {
     switch (message.type) {
       case 'SAVE_FORM':

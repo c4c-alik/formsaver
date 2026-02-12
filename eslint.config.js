@@ -29,11 +29,28 @@ export default tsPlugin.config(
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
+      // 处理带查询参数的导入
+      'import/no-unresolved': ['off'],
+      // 支持带任意查询参数的导入
+      'import/extensions': ['off'],
     },
     files: ['src/**/*.ts'],
-    ignores: ['dist/**', 'node_modules/**', '*.json'],
+    ignores: ['dist/**', 'node_modules/**', '*.json', 'rollup.config.js'],
     linterOptions: {
-      reportUnusedDisableDirectives: 'error',
+      reportUnusedDisableDirectives: 'warn',
+    },
+  },
+  // 为构建配置文件单独配置
+  {
+    files: ['rollup.config.js', 'build.js'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        __dirname: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+      },
     },
   }
 );

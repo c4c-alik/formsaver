@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node build.js",
+    "build": "node build.js --prod",
     "preview": "vite preview",
     "lint": "eslint src/**/*.{ts,vue}",
     "lint:fix": "eslint src/**/*.{ts,vue} --fix",
@@ -22,22 +22,31 @@
     ]
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.1",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-replace": "^6.0.1",
+    "@rollup/plugin-typescript": "^12.1.1",
     "@types/chrome": "^0.0.268",
     "@typescript-eslint/eslint-plugin": "7.16.0",
     "@typescript-eslint/parser": "7.16.0",
+    "@vitejs/plugin-vue": "^6.0.4",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "5.2.1",
     "husky": "9.1.7",
     "lint-staged": "15.2.10",
     "prettier": "3.3.3",
+    "rollup": "^4.28.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-vue": "^6.0.0",
     "typescript": "5.5.3",
     "typescript-eslint": "8.22.0"
   },
   "private": true,
   "dependencies": {
-    "@vitejs/plugin-vue": "^6.0.4",
-    "vite": "^7.3.1",
     "vue": "^3.5.28"
   }
 }

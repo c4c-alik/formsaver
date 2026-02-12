@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "lib": ["dom", "es2017"],
-    "types": ["chrome", "vite/client"],
+    "types": ["chrome"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true
   },
