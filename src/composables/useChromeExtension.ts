@@ -20,7 +20,7 @@ export function useChromeExtension() {
     return new Promise(resolve => {
       chrome.tabs.sendMessage(tabId, message, response => {
         if (chrome.runtime.lastError) {
-          console.error('发送消息失败:', chrome.runtime.lastError);
+          console.error('Failed to send message:', chrome.runtime.lastError);
           resolve({ success: false, error: chrome.runtime.lastError.message });
         } else {
           resolve(response as SendMessageResponse);
@@ -34,7 +34,7 @@ export function useChromeExtension() {
     return new Promise(resolve => {
       chrome.runtime.sendMessage(message, response => {
         if (chrome.runtime.lastError) {
-          console.error('发送消息失败:', chrome.runtime.lastError);
+          console.error('Failed to send message:', chrome.runtime.lastError);
           resolve({ success: false, error: chrome.runtime.lastError.message });
         } else {
           resolve(response as SendMessageResponse);

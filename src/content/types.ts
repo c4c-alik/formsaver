@@ -1,4 +1,4 @@
-// 存储设置
+// Storage settings
 export interface StorageSettings {
   autoSave: boolean;
   saveInterval: number;
@@ -6,7 +6,7 @@ export interface StorageSettings {
   encryptionEnabled: boolean;
 }
 
-// 统计数据
+// Statistics data
 export interface StorageStatistics {
   totalSaves: number;
   totalRestores: number;
@@ -14,7 +14,7 @@ export interface StorageStatistics {
   storageUsage: number;
 }
 
-// 同步配置
+// Sync configuration
 export interface SyncConfig {
   enabled: boolean;
   provider: 'none' | 'drive' | 'dropbox' | 'onedrive';
@@ -22,20 +22,20 @@ export interface SyncConfig {
   conflictResolution: 'local' | 'remote' | 'manual';
 }
 
-// 表单元数据
+// Form metadata
 export interface FormMetadata {
   lastAccessed: string;
   accessCount: number;
   tags: string[];
 }
 
-// 字段验证规则
+// Field validation rules
 export interface FieldValidation {
   required: boolean;
   pattern: string | null;
 }
 
-// 表单字段类型定义
+// Form field type definition
 export interface FormField {
   type: string;
   value: string | boolean | number;
@@ -61,14 +61,14 @@ export interface FormField {
   validation?: FieldValidation;
 }
 
-// 表单信息统计
+// Form information statistics
 export interface FormInfo {
   totalFields: number;
   filledFields: number;
   fieldTypes: Record<string, number>;
 }
 
-// 单个表单数据结构
+// Single form data structure
 export interface FormData {
   id: string;
   name: string;
@@ -81,7 +81,7 @@ export interface FormData {
   isTemplate?: boolean;
 }
 
-// 存储结构
+// Storage structure
 export interface StorageData {
   version: string;
   forms: Record<string, FormData>;
@@ -90,7 +90,7 @@ export interface StorageData {
   sync?: SyncConfig;
 }
 
-// 消息类型定义
+// Message type definition
 export type MessageType =
   | 'SAVE_FORM'
   | 'RESTORE_FORM'

@@ -3,10 +3,14 @@ import { FormCollector } from './formCollector';
 import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
 
-console.log('🎯 Content script 已注入到页面:', window.location.href);
-console.log('扩展ID:', chrome.runtime.id);
+console.log(
+  '🎯 Content script injected into page:',
+  window.location.href,
+  'Extension ID:',
+  chrome.runtime.id
+);
 
-// 监听来自background script的消息
+// Listen for messages from background script
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
   handleMessage(message, sender, sendResponse);
   return true;
@@ -17,9 +21,9 @@ async function handleMessage(
   sender: chrome.runtime.MessageSender,
   sendResponse: (response?: any) => void
 ) {
-  // 基本验证
+  // Basic validation
   if (!message || !message.type) {
-    sendResponse({ success: false, error: '无效的消息格式' });
+    sendResponse({ success: false, error: 'Invalid message format' });
     return;
   }
   try {
@@ -35,35 +39,35 @@ async function handleMessage(
         break;
 
       default:
-        sendResponse({ success: false, error: '未知消息类型' });
+        sendResponse({ success: false, error: 'unknow message type' });
     }
   } catch (error) {
-    console.error('处理内容脚本消息时出错:', error);
+    console.error('Error handling content script message:', error);
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
 
 /**
- * 触发保存表单
+ * Trigger form saving
  */
 async function saveForm() {
   try {
     // 显示加载状态
-    showNotification('正在保存表单...', 'info');
+    showNotification('Saving form...', 'info');
 
-    // 直接收集并保存表单数据
+    // Directly collect and save form data
     const formData = FormCollector.collectFormData();
 
     if (!formData) {
-      showNotification('当前页面没有找到表单', 'error');
+      showNotification('No forms found on current page', 'error');
       return;
     }
 
-    // 直接调用存储管理器保存数据
+    // Directly call storage manager to save data
     const success = await StorageManager.saveForm(formData);
 
     if (success) {
-      showNotification('表单保存成功！', 'success');
+      showNotification('Form saved successfully!', 'success');
       // 可选：发送通知
       chrome.runtime
         .sendMessage({
@@ -74,64 +78,64 @@ async function saveForm() {
           // 忽略通知发送失败
         });
     } else {
-      showNotification('保存失败: 存储操作失败', 'error');
+      showNotification('Save failed: Storage operation failed', 'error');
     }
   } catch (error) {
-    console.error('保存表单失败:', error);
-    showNotification(`保存失败: ${(error as Error).message}`, 'error');
+    console.error('Failed to save form:', error);
+    showNotification(`Save failed: ${(error as Error).message}`, 'error');
   }
 }
 
 /**
- * 触发恢复表单
+ * Trigger form restoration
  */
 async function restoreForm() {
   try {
     // 显示加载状态
-    showNotification('正在恢复表单...', 'info');
+    showNotification('Restoring form...', 'info');
 
-    // 直接从存储获取表单数据
+    // Directly get form data from storage
     const formData = await StorageManager.getForm(window.location.href);
 
     if (!formData) {
-      showNotification('未找到保存的表单数据', 'error');
+      showNotification('No saved form data found', 'error');
       return;
     }
 
-    // 验证是否可以在当前页面恢复
+    // Verify if form can be restored on current page
     if (!FormRestorer.canRestoreForm(formData)) {
-      showNotification('无法在当前页面恢复此表单', 'error');
+      showNotification('Cannot restore this form on current page', 'error');
       return;
     }
 
-    // 直接恢复表单数据
+    // Directly restore form data
     const success = await FormRestorer.restoreFormData(formData);
 
     if (success) {
-      showNotification('表单恢复成功！', 'success');
-      // 可选：发送通知
+      showNotification('Form restored successfully!', 'success');
+      // optional: send notification
       chrome.runtime
         .sendMessage({
           type: 'FORM_RESTORED',
           data: { formName: formData.name },
         })
         .catch(() => {
-          // 忽略通知发送失败
+          // ignore notification sending failure
         });
     } else {
-      showNotification('恢复失败: 恢复操作失败', 'error');
+      showNotification('Restore failed: Restore operation failed', 'error');
     }
   } catch (error) {
-    console.error('恢复表单失败:', error);
-    showNotification(`恢复失败: ${(error as Error).message}`, 'error');
+    console.error('Failed to restore form:', error);
+    showNotification(`Restore failed: ${(error as Error).message}`, 'error');
   }
 }
 
 /**
- * 显示页面内通知
+ * Show in-page notification
  */
 function showNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  // 创建通知元素
+  // Create notification element
   const notification = document.createElement('div');
   notification.style.cssText = `
     position: fixed;
@@ -148,7 +152,7 @@ function showNotification(message: string, type: 'success' | 'error' | 'info' = 
     word-wrap: break-word;
   `;
 
-  // 根据类型设置样式
+  // Set styles based on type
   switch (type) {
     case 'success':
       notification.style.backgroundColor = '#4CAF50';
@@ -163,10 +167,10 @@ function showNotification(message: string, type: 'success' | 'error' | 'info' = 
 
   notification.textContent = message;
 
-  // 添加到页面
+  // Add to page
   document.body.appendChild(notification);
 
-  // 3秒后自动移除
+  // Auto remove after 3 seconds
   setTimeout(() => {
     if (notification.parentNode) {
       notification.parentNode.removeChild(notification);
@@ -175,17 +179,17 @@ function showNotification(message: string, type: 'success' | 'error' | 'info' = 
 }
 
 /**
- * 页面加载完成后初始化
+ * Initialize after page load completes
  */
 document.addEventListener('DOMContentLoaded', () => {
-  // 可以在这里添加页面特定的初始化逻辑
+  // Can add page-specific initialization logic here
   console.log('FormSaver content script loaded');
 });
 
-// 页面完全加载后检查是否有保存的表单
+// Check for saved forms after page fully loads
 window.addEventListener('load', async () => {
   try {
-    // 检查当前页面是否有保存的表单
+    // Check if current page has saved forms
     const response = await chrome.runtime.sendMessage({
       type: 'GET_SAVED_FORMS',
     });
@@ -196,24 +200,24 @@ window.addEventListener('load', async () => {
       );
 
       if (currentUrlForms.length > 0) {
-        // 可以显示一个小提示告知用户有可恢复的表单
-        console.log(`发现 ${currentUrlForms.length} 个可恢复的表单`);
+        // Can show a small hint to inform user about restorable forms
+        console.log(`Found ${currentUrlForms.length} restorable forms`);
       }
     }
   } catch (error) {
-    console.error('检查保存表单时出错:', error);
+    console.error('Error checking saved forms:', error);
   }
 });
 
-// 监听键盘快捷键（可选功能）
+// Listen for keyboard shortcuts (optional feature)
 document.addEventListener('keydown', event => {
-  // Ctrl+Shift+S 保存表单
+  // Ctrl+Shift+S Save form
   if (event.ctrlKey && event.shiftKey && event.key === 'S') {
     event.preventDefault();
     saveForm();
   }
 
-  // Ctrl+Shift+R 恢复表单
+  // Ctrl+Shift+R Restore form
   if (event.ctrlKey && event.shiftKey && event.key === 'R') {
     event.preventDefault();
     restoreForm();

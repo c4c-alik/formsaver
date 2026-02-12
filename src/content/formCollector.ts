@@ -2,7 +2,7 @@ import { FormField, FormInfo, FormData } from './types';
 
 export class FormCollector {
   /**
-   * 收集当前页面的所有表单数据
+   * Collect all form data from current page
    */
   static collectFormData(): FormData | null {
     const forms = document.querySelectorAll('form');
@@ -10,14 +10,14 @@ export class FormCollector {
       return null;
     }
 
-    // 获取第一个表单（通常是最主要的）
+    // get first form
     const form = forms[0];
     const formFields: FormField[] = [];
     let totalFields = 0;
     let filledFields = 0;
     const fieldTypes: Record<string, number> = {};
 
-    // 收集所有可输入元素
+    // collect all form elements
     const inputElements = form.querySelectorAll('input, select, textarea');
 
     inputElements.forEach((element: Element) => {
@@ -26,11 +26,11 @@ export class FormCollector {
         formFields.push(field);
         totalFields++;
 
-        // 统计字段类型
+        // analyze field type
         const fieldType = field.type;
         fieldTypes[fieldType] = (fieldTypes[fieldType] || 0) + 1;
 
-        // 统计已填字段
+        // Check if field is filled
         if (this.isFieldFilled(field)) {
           filledFields++;
         }
@@ -54,13 +54,13 @@ export class FormCollector {
   }
 
   /**
-   * 处理单个表单元素
+   * Process single form element
    */
   private static processElement(element: Element): FormField | null {
     const tagName = element.tagName.toLowerCase();
     const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-    // 跳过隐藏字段和按钮
+    // Skip hidden fields and buttons
     if (
       inputElement.type === 'hidden' ||
       inputElement.type === 'submit' ||
@@ -73,7 +73,7 @@ export class FormCollector {
     let value: string | boolean | number = '';
     let options: Array<{ value: string; text: string; selected: boolean }> | undefined;
 
-    // 获取值和选项
+    // Get value and options
     switch (tagName) {
       case 'input': {
         const input = element as HTMLInputElement;
@@ -101,10 +101,10 @@ export class FormCollector {
         return null;
     }
 
-    // 生成选择器
+    // Generate selectors
     const selectors = this.generateSelectors(element);
 
-    // 获取标签文本
+    // Get label text
     const label = this.findLabel(element);
 
     return {
@@ -125,23 +125,23 @@ export class FormCollector {
   }
 
   /**
-   * 生成CSS选择器
+   * Generate CSS selectors
    */
   private static generateSelectors(element: Element): { primary: string; alternative?: string[] } {
     const selectors: string[] = [];
 
-    // ID选择器
+    // ID selector
     if (element.id) {
       selectors.push(`#${element.id}`);
     }
 
-    // Name属性选择器
+    // Name attribute selector
     const name = (element as HTMLInputElement).name;
     if (name) {
       selectors.push(`${element.tagName.toLowerCase()}[name='${name}']`);
     }
 
-    // 类名选择器
+    // Class name selector
     if (element.className) {
       const classes = element.className.split(' ').filter(c => c.trim());
       if (classes.length > 0) {
@@ -149,7 +149,7 @@ export class FormCollector {
       }
     }
 
-    // 父级路径选择器
+    // Parent path selector
     const parentSelector = this.getParentPathSelector(element);
     if (parentSelector) {
       selectors.push(parentSelector);
@@ -162,7 +162,7 @@ export class FormCollector {
   }
 
   /**
-   * 获取父级路径选择器
+   * Get parent path selector
    */
   private static getParentPathSelector(element: Element): string | null {
     const path: string[] = [];
@@ -181,7 +181,7 @@ export class FormCollector {
       path.unshift(selector);
       current = current.parentElement;
 
-      // 限制路径长度
+      // Limit path length
       if (path.length > 3) break;
     }
 
@@ -189,12 +189,12 @@ export class FormCollector {
   }
 
   /**
-   * 查找关联的标签
+   * Find associated label
    */
   private static findLabel(element: Element): string | undefined {
     const input = element as HTMLInputElement;
 
-    // 通过for属性查找
+    // Find by for attribute
     if (input.id) {
       const label = document.querySelector(`label[for="${input.id}"]`);
       if (label) {
@@ -202,13 +202,13 @@ export class FormCollector {
       }
     }
 
-    // 通过父级查找
+    // Find by parent
     const parent = element.parentElement;
     if (parent && parent.tagName.toLowerCase() === 'label') {
       return parent.textContent?.trim() || undefined;
     }
 
-    // 通过相邻元素查找
+    // Find by adjacent element
     const prevSibling = element.previousElementSibling;
     if (prevSibling && prevSibling.tagName.toLowerCase() === 'label') {
       return prevSibling.textContent?.trim() || undefined;
@@ -218,7 +218,7 @@ export class FormCollector {
   }
 
   /**
-   * 判断字段是否已填写
+   * Check if field is filled
    */
   private static isFieldFilled(field: FormField): boolean {
     if (field.type === 'checkbox' || field.type === 'radio') {
@@ -228,14 +228,14 @@ export class FormCollector {
   }
 
   /**
-   * 获取表单名称
+   * Get form name
    */
   private static getFormName(form: HTMLFormElement): string | null {
-    // 尝试从表单属性获取
+    // Try to get from form attributes
     if (form.name) return form.name;
     if (form.id) return form.id;
 
-    // 尝试从标题或其他元素获取
+    // Try to get from title or other elements
     const title = form.querySelector('h1, h2, h3, legend');
     if (title) return title.textContent?.trim() || null;
 
@@ -243,7 +243,7 @@ export class FormCollector {
   }
 
   /**
-   * 生成表单ID
+   * Generate form ID
    */
   private static generateFormId(): string {
     return 'form_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);

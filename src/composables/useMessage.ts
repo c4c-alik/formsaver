@@ -25,7 +25,7 @@ export function useMessage() {
 
     messages.value.push(message);
 
-    // 自动移除消息
+    // Auto remove message
     setTimeout(() => {
       removeMessage(id);
     }, duration);

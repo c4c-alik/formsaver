@@ -128,7 +128,7 @@ const loading = ref(false)
 const loadingStatus = ref(true)
 const statusText = ref('检测中...')
 
-// 获取当前标签页信息
+// Get current tab information
 onMounted(async () => {
   try {
     const tabs = await chrome.tabs.query({
@@ -146,14 +146,14 @@ onMounted(async () => {
       ])
     }
   } catch (error) {
-    console.error('Popup初始化失败:', error)
-    showMessage('初始化失败，请刷新页面重试', 'error')
+    console.error('Popup initialization failed:', error)
+    showMessage('Initialization failed, please refresh the page and try again', 'error')
   } finally {
     loadingStatus.value = false
   }
 })
 
-// 检查表单状态
+// Check form status
 async function checkFormStatus() {
   try {
     const response = await sendMessageToTab(currentTab.value.id, {
@@ -161,9 +161,9 @@ async function checkFormStatus() {
     })
 
     hasForms.value = response?.hasForms || false
-    statusText.value = hasForms.value ? '发现表单' : '无表单'
+    statusText.value = hasForms.value ? 'Form found' : 'No forms'
     
-    // 检查是否有已保存的表单
+    // Check if there are saved forms
     const savedResponse = await sendMessageToBackground({
       type: 'GET_SAVED_FORMS'
     })
@@ -175,13 +175,13 @@ async function checkFormStatus() {
       hasSavedForms.value = currentUrlForms.length > 0
     }
   } catch (error) {
-    console.error('检查表单状态失败:', error)
+    console.error('Failed to check form status:', error)
     hasForms.value = false
-    statusText.value = '无法检测'
+    statusText.value = 'Unable to detect'
   }
 }
 
-// 加载已保存的表单
+// Load saved forms
 async function loadSavedForms() {
   try {
     const response = await sendMessageToBackground({
@@ -192,11 +192,11 @@ async function loadSavedForms() {
       savedForms.value = response.forms
     }
   } catch (error) {
-    console.error('加载已保存表单失败:', error)
+    console.error('Failed to load saved forms:', error)
   }
 }
 
-// 保存表单
+// Save form
 async function saveForm() {
   if (!hasForms.value) return
   
@@ -207,23 +207,23 @@ async function saveForm() {
     })
 
     if (response?.success) {
-      showMessage('表单保存成功！', 'success')
+      showMessage('Form saved successfully!', 'success')
       await Promise.all([
         loadSavedForms(),
         checkFormStatus()
       ])
     } else {
-      showMessage(response?.error || '保存失败', 'error')
+      showMessage(response?.error || 'Save failed', 'error')
     }
   } catch (error) {
-    console.error('保存表单失败:', error)
-    showMessage('保存失败：' + error.message, 'error')
+    console.error('Failed to save form:', error)
+    showMessage('Save failed: ' + error.message, 'error')
   } finally {
     loading.value = false
   }
 }
 
-// 恢复表单
+// Restore form
 async function restoreForm() {
   if (!hasSavedForms.value) return
   
@@ -234,22 +234,22 @@ async function restoreForm() {
     })
 
     if (response?.success) {
-      showMessage('表单恢复成功！', 'success')
+      showMessage('Form restored successfully!', 'success')
     } else {
-      showMessage(response?.error || '恢复失败', 'error')
+      showMessage(response?.error || 'Restore failed', 'error')
     }
   } catch (error) {
-    console.error('恢复表单失败:', error)
-    showMessage('恢复失败：' + error.message, 'error')
+    console.error('Failed to restore form:', error)
+    showMessage('Restore failed: ' + error.message, 'error')
   } finally {
     loading.value = false
   }
 }
 
-// 恢复指定表单
+// Restore specific form
 async function restoreSpecificForm(url) {
   try {
-    // 切换到对应页面
+    // Switch to corresponding page
     const tabs = await chrome.tabs.query({ url: url })
     let tabId
     
@@ -261,7 +261,7 @@ async function restoreSpecificForm(url) {
       tabId = newTab.id
     }
 
-    // 等待页面加载完成后再恢复
+    // Wait for page to load completely before restoring
     setTimeout(async () => {
       try {
         const response = await sendMessageToTab(tabId, {
@@ -269,7 +269,7 @@ async function restoreSpecificForm(url) {
         })
         
         if (response?.success) {
-          showMessage('表单恢复成功！', 'success')
+          showMessage('Form restored successfully!', 'success')
         }
       } catch (error) {
         console.error('恢复表单失败:', error)
@@ -277,14 +277,14 @@ async function restoreSpecificForm(url) {
     }, 1000)
 
   } catch (error) {
-    console.error('恢复指定表单失败:', error)
-    showMessage('恢复失败：' + error.message, 'error')
+    console.error('Failed to restore specific form:', error)
+    showMessage('Restore failed: ' + error.message, 'error')
   }
 }
 
-// 删除表单
+// Delete form
 async function deleteForm(url) {
-  if (!confirm('确定要删除这个保存的表单吗？')) {
+  if (!confirm('Are you sure you want to delete this saved form?')) {
     return
   }
 
@@ -295,27 +295,27 @@ async function deleteForm(url) {
     })
 
     if (response?.success) {
-      showMessage('删除成功！', 'success')
+      showMessage('Deleted successfully!', 'success')
       await Promise.all([
         loadSavedForms(),
         checkFormStatus()
       ])
     } else {
-      showMessage(response?.error || '删除失败', 'error')
+      showMessage(response?.error || 'Delete failed', 'error')
     }
   } catch (error) {
-    console.error('删除表单失败:', error)
-    showMessage('删除失败：' + error.message, 'error')
+    console.error('Failed to delete form:', error)
+    showMessage('Delete failed: ' + error.message, 'error')
   }
 }
 
-// 打开设置页面
+// Open settings page
 function openOptions() {
   chrome.runtime.openOptionsPage()
   window.close()
 }
 
-// 工具函数
+// Utility functions
 function getDomain(url) {
   try {
     return new URL(url).hostname

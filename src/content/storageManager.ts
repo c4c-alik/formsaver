@@ -5,57 +5,57 @@ export class StorageManager {
   private static readonly MAX_STORAGE_SIZE = 10 * 1024 * 1024; // 5MB
 
   /**
-   * 保存表单数据
+   * Save form data
    */
   static async saveForm(formData: FormData): Promise<boolean> {
     try {
       const storageData = await this.getStorageData();
 
-      // 使用URL作为key存储
+      // Use URL as key for storage
       storageData.forms[formData.url] = formData;
 
-      // 检查存储大小
+      // Check storage size
       const dataSize = JSON.stringify(storageData).length;
       if (dataSize > this.MAX_STORAGE_SIZE) {
-        throw new Error('存储空间不足');
+        throw new Error('Insufficient storage space');
       }
 
       await chrome.storage.local.set({ [this.STORAGE_KEY]: storageData });
       return true;
     } catch (error) {
-      console.error('保存表单失败:', error);
+      console.error('Failed to save form:', error);
       return false;
     }
   }
 
   /**
-   * 获取指定URL的表单数据
+   * Get form data for specified URL
    */
   static async getForm(url: string): Promise<FormData | null> {
     try {
       const storageData = await this.getStorageData();
       return storageData.forms[url] || null;
     } catch (error) {
-      console.error('获取表单失败:', error);
+      console.error('Failed to get form:', error);
       return null;
     }
   }
 
   /**
-   * 获取所有保存的表单
+   * Get all saved forms
    */
   static async getAllForms(): Promise<Record<string, FormData>> {
     try {
       const storageData = await this.getStorageData();
       return storageData.forms;
     } catch (error) {
-      console.error('获取所有表单失败:', error);
+      console.error('Failed to get all forms:', error);
       return {};
     }
   }
 
   /**
-   * 删除指定URL的表单
+   * Delete form for specified URL
    */
   static async deleteForm(url: string): Promise<boolean> {
     try {
@@ -67,13 +67,13 @@ export class StorageManager {
       }
       return false;
     } catch (error) {
-      console.error('删除表单失败:', error);
+      console.error('Failed to delete form:', error);
       return false;
     }
   }
 
   /**
-   * 清空所有表单数据
+   * Clear all form data
    */
   static async clearAllForms(): Promise<boolean> {
     try {
@@ -84,13 +84,13 @@ export class StorageManager {
       await chrome.storage.local.set({ [this.STORAGE_KEY]: storageData });
       return true;
     } catch (error) {
-      console.error('清空表单失败:', error);
+      console.error('Failed to clear forms:', error);
       return false;
     }
   }
 
   /**
-   * 获取存储数据
+   * Get storage data
    */
   private static async getStorageData(): Promise<StorageData> {
     try {
@@ -98,7 +98,7 @@ export class StorageManager {
       const storageData = result[this.STORAGE_KEY];
 
       if (!storageData) {
-        // 初始化存储结构
+        // Initialize storage structure
         return {
           version: '1.0',
           forms: {},
@@ -107,8 +107,8 @@ export class StorageManager {
 
       return storageData;
     } catch (error) {
-      console.error('获取存储数据失败:', error);
-      // 返回默认结构
+      console.error('Failed to get storage data:', error);
+      // Return default structure
       return {
         version: '1.0',
         forms: {},
@@ -117,36 +117,38 @@ export class StorageManager {
   }
 
   /**
-   * 迁移旧版本数据（支持多版本升级路径）
+   * Migrate old version data (support multi-version upgrade path)
    */
   static async migrateData(): Promise<void> {
     try {
       const storageData = await this.getStorageData();
-      const currentVersion = '2.1'; // 当前最新版本
+      const currentVersion = '2.1'; // Current latest version
 
-      // 如果已经是最新版本，无需迁移
+      // If already latest version, no migration needed
       if (storageData.version === currentVersion) {
         return;
       }
 
-      console.log(`检测到旧版本数据 v${storageData.version}，开始升级到 v${currentVersion}`);
+      console.log(
+        `Detected old version data v${storageData.version}, starting upgrade to v${currentVersion}`
+      );
 
-      // 按版本顺序逐步升级
+      // Upgrade step by step according to version order
       while (storageData.version !== currentVersion) {
         await this.upgradeToNextVersion(storageData);
       }
 
-      // 保存升级后的数据
+      // Save upgraded data
       await chrome.storage.local.set({ [this.STORAGE_KEY]: storageData });
-      console.log(`数据升级完成，当前版本: v${storageData.version}`);
+      console.log(`Data upgrade completed, current version: v${storageData.version}`);
     } catch (error) {
-      console.error('数据迁移失败:', error);
-      throw error; // 重新抛出错误以便上层处理
+      console.error('Data migration failed:', error);
+      throw error; // Re-throw error for upper level handling
     }
   }
 
   /**
-   * 升级到下一个版本
+   * Upgrade to next version
    */
   private static async upgradeToNextVersion(storageData: StorageData): Promise<void> {
     const currentVersion = storageData.version;
@@ -159,20 +161,22 @@ export class StorageManager {
         await this.upgradeFrom20To21(storageData);
         break;
       default:
-        // 处理未知版本
-        console.warn(`未知版本: ${currentVersion}，尝试直接升级到最新版本`);
+        // Handle unknown version
+        console.warn(
+          `Unknown version: ${currentVersion}, trying to upgrade directly to latest version`
+        );
         storageData.version = '2.1';
         await this.applyDefaultUpgrades(storageData);
     }
   }
 
   /**
-   * 从1.0升级到2.0
+   * Upgrade from 1.0 to 2.0
    */
   private static async upgradeFrom10To20(storageData: StorageData): Promise<void> {
-    console.log('正在升级: v1.0 → v2.0');
+    console.log('Upgrading: v1.0 → v2.0');
 
-    // 添加新的配置字段
+    // Add new configuration fields
     (storageData as any).settings = {
       autoSave: false,
       saveInterval: 30000, // 30秒
@@ -180,16 +184,16 @@ export class StorageManager {
       encryptionEnabled: false,
     };
 
-    // 为每个表单添加新的元数据字段
+    // Add new metadata fields for each form
     for (const [url, formData] of Object.entries(storageData.forms)) {
-      console.log(`正在升级表单数据: ${url}`);
+      console.log(`Upgrading form data: ${url}`);
       (formData as any).metadata = {
         lastAccessed: new Date().toISOString(),
         accessCount: 0,
         tags: [],
       };
 
-      // 标准化字段结构
+      // Standardize field structure
       formData.formFields = formData.formFields.map(field => ({
         ...field,
         validation: {
@@ -203,12 +207,12 @@ export class StorageManager {
   }
 
   /**
-   * 从2.0升级到2.1
+   * Upgrade from 2.0 to 2.1
    */
   private static async upgradeFrom20To21(storageData: StorageData): Promise<void> {
-    console.log('正在升级: v2.0 → v2.1');
+    console.log('Upgrading: v2.0 → v2.1');
 
-    // 添加统计数据
+    // Add statistics data
     (storageData as any).statistics = {
       totalSaves: 0,
       totalRestores: 0,
@@ -216,15 +220,15 @@ export class StorageManager {
       storageUsage: 0,
     };
 
-    // 为表单字段添加索引优化
+    // Add index optimization for form fields
     for (const formData of Object.values(storageData.forms)) {
       (formData as any).fieldIndex = this.buildFieldIndex(formData.formFields);
 
-      // 添加表单模板标识
+      // Add form template identifier
       (formData as any).isTemplate = false;
     }
 
-    // 添加云同步配置
+    // Add cloud sync configuration
     (storageData as any).sync = {
       enabled: false,
       provider: 'none',
@@ -236,10 +240,10 @@ export class StorageManager {
   }
 
   /**
-   * 应用默认升级（处理异常情况）
+   * Apply default upgrade (handle exceptional cases)
    */
   private static async applyDefaultUpgrades(storageData: StorageData): Promise<void> {
-    // 确保必要的字段存在
+    // Ensure necessary fields exist
     if (!(storageData as any).settings) {
       (storageData as any).settings = {
         autoSave: false,
@@ -267,7 +271,7 @@ export class StorageManager {
       };
     }
 
-    // 为每个表单添加缺失的字段
+    // Add missing fields for each form
     for (const formData of Object.values(storageData.forms)) {
       if (!(formData as any).metadata) {
         (formData as any).metadata = {
@@ -288,22 +292,22 @@ export class StorageManager {
   }
 
   /**
-   * 构建字段索引以提高查询性能
+   * Build field index to improve query performance
    */
   private static buildFieldIndex(formFields: FormField[]): Record<string, number> {
     const index: Record<string, number> = {};
 
     formFields.forEach((field, idx) => {
-      // 使用选择器作为索引键
+      // Use selector as index key
       const key = field.selectors.primary || `field_${idx}`;
       index[key] = idx;
 
-      // 也为name属性建立索引
+      // Also build index for name attribute
       if (field.attributes.name) {
         index[`name:${field.attributes.name}`] = idx;
       }
 
-      // 为id属性建立索引
+      // Build index for id attribute
       if (field.attributes.id) {
         index[`id:${field.attributes.id}`] = idx;
       }
@@ -313,12 +317,12 @@ export class StorageManager {
   }
 
   /**
-   * 标准化表单数据格式（示例迁移函数）
+   * Normalize form data format (example migration function)
    */
   private static normalizeFormData(oldForms: any): Record<string, FormData> {
     const normalized: Record<string, FormData> = {};
 
-    // 转换旧格式到新格式
+    // Convert old format to new format
     for (const [url, formObj] of Object.entries(oldForms)) {
       const oldForm = formObj as any;
       normalized[url] = {
@@ -368,7 +372,7 @@ export class StorageManager {
   }
 
   /**
-   * 获取存储使用情况
+   * Get storage usage information
    */
   static async getStorageInfo(): Promise<{
     totalForms: number;
@@ -388,7 +392,7 @@ export class StorageManager {
         usagePercentage: Math.round((size / this.MAX_STORAGE_SIZE) * 100),
       };
     } catch (error) {
-      console.error('获取存储信息失败:', error);
+      console.error('Failed to get storage information:', error);
       return {
         totalForms: 0,
         totalSize: 0,
@@ -399,34 +403,34 @@ export class StorageManager {
   }
 
   /**
-   * 导出数据
+   * Export data
    */
   static async exportData(): Promise<string> {
     try {
       const storageData = await this.getStorageData();
       return JSON.stringify(storageData, null, 2);
     } catch (error) {
-      console.error('导出数据失败:', error);
+      console.error('Failed to export data:', error);
       throw error;
     }
   }
 
   /**
-   * 导入数据
+   * Import data
    */
   static async importData(data: string): Promise<boolean> {
     try {
       const importedData: StorageData = JSON.parse(data);
 
-      // 验证数据结构
+      // Validate data structure
       if (!importedData.version || !importedData.forms) {
-        throw new Error('无效的数据格式');
+        throw new Error('Invalid data format');
       }
 
       await chrome.storage.local.set({ [this.STORAGE_KEY]: importedData });
       return true;
     } catch (error) {
-      console.error('导入数据失败:', error);
+      console.error('Failed to import data:', error);
       return false;
     }
   }

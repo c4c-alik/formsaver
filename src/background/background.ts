@@ -1,24 +1,24 @@
 import { Message } from '../content/types';
 import { StorageManager } from '../content/storageManager';
 
-// 监听来自content script的消息
+// Listen for messages from content script
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
   handleMessage(message, sender, sendResponse);
-  return true; // 保持消息通道开放以支持异步响应
+  return true;
 });
 
-// 扩展安装时初始化
+// Initialize when extension is installed
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('FormSaver extension installed');
 
-  // 创建右键菜单
+  // Create context menu
   await createContextMenu();
 
-  // 迁移旧数据
+  // Migrate old data
   await StorageManager.migrateData();
 });
 
-// 监听右键菜单点击
+// Listen for context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id) return;
 
@@ -26,27 +26,27 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     case 'save-form':
       sendMessageToContentScript(tab.id, { type: 'SAVE_FORM' })
         .then(response => {
-          console.log('Content script保存响应:', response);
+          console.log('Content script save response:', response);
         })
         .catch(error => {
-          console.error('发送保存表单消息失败:', error);
-          // 显示通知给用户
+          console.error('Failed to send save form message:', error);
+          // Show notification to user
           chrome.notifications.create({
             type: 'basic',
             iconUrl: 'assets/icon48.png',
             title: 'FormSaver',
-            message: '无法保存表单：页面可能不支持或正在加载中',
+            message: 'cannot save form: page may not support or loading',
           });
         });
       break;
     case 'restore-form':
       sendMessageToContentScript(tab.id, { type: 'RESTORE_FORM' }).catch(error => {
-        console.error('发送恢复表单消息失败:', error);
+        console.error('Failed to send restore form message:', error);
         chrome.notifications.create({
           type: 'basic',
           iconUrl: 'assets/icon48.png',
           title: 'FormSaver',
-          message: '无法恢复表单：页面可能不支持或正在加载中',
+          message: 'cannot restore form: page may not support or loading',
         });
       });
       break;
@@ -56,21 +56,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// 标签页更新时检查是否有保存的表单
+// Check for saved forms when tab updates
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url) {
     try {
-      // 检查该URL是否有保存的表单
+      // Check if there are saved forms for this URL
       const savedForm = await StorageManager.getForm(tab.url);
       if (savedForm) {
-        // 可以在这里显示页面提示或badge
+        // Can show page hint or badge here
         chrome.action.setBadgeText({
           text: '💾',
           tabId: tabId,
         });
       }
     } catch (error) {
-      console.error('检查保存表单时出错:', error);
+      console.error('Error checking saved forms:', error);
     }
   }
 });
@@ -91,16 +91,16 @@ async function handleMessage(
         break;
 
       default:
-        sendResponse({ success: false, error: '未知消息类型' });
+        sendResponse({ success: false, error: 'Unknown message type' });
     }
   } catch (error) {
-    console.error('处理消息时出错:', error);
+    console.error('Error handling message:', error);
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
 
 /**
- * 处理获取保存表单列表请求
+ * Handle get saved forms list request
  */
 async function handleGetSavedForms(
   message: Message,
@@ -118,13 +118,13 @@ async function handleGetSavedForms(
 
     sendResponse({ success: true, forms: formList });
   } catch (error) {
-    console.error('获取表单列表失败:', error);
+    console.error('Failed to get forms list:', error);
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
 
 /**
- * 处理删除表单请求
+ * Handle delete form request
  */
 async function handleDeleteForm(
   message: Message,
@@ -134,7 +134,7 @@ async function handleDeleteForm(
   try {
     const url = message.data?.url;
     if (!url) {
-      sendResponse({ success: false, error: '缺少URL参数' });
+      sendResponse({ success: false, error: 'Missing URL parameter' });
       return;
     }
 
@@ -143,19 +143,19 @@ async function handleDeleteForm(
     if (success) {
       sendResponse({ success: true });
     } else {
-      sendResponse({ success: false, error: '删除表单失败' });
+      sendResponse({ success: false, error: 'Failed to delete form' });
     }
   } catch (error) {
-    console.error('删除表单失败:', error);
+    console.error('Failed to delete form:', error);
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
 
 /**
- * 创建右键菜单
+ * Create context menu
  */
 /**
- * 向内容脚本发送消息的封装函数，包含错误处理和重试机制
+ * Wrapper function to send messages to content script with error handling and retry mechanism
  */
 async function sendMessageToContentScript(
   tabId: number,
@@ -164,13 +164,13 @@ async function sendMessageToContentScript(
 ): Promise<any> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // 检查标签页是否存在且可访问
+      // Check if tab exists and is accessible
       const tab = await chrome.tabs.get(tabId);
       if (!tab || !tab.url) {
-        throw new Error('标签页不存在或URL无效');
+        throw new Error('Tab does not exist or URL is invalid');
       }
 
-      // 尝试发送消息
+      // Try to send message
       const response = await new Promise((resolve, reject) => {
         chrome.tabs.sendMessage(tabId, message, response => {
           if (chrome.runtime.lastError) {
@@ -185,53 +185,56 @@ async function sendMessageToContentScript(
     } catch (error) {
       const errorMessage = (error as Error).message;
 
-      // 如果是连接错误且还有重试机会
+      // If it's a connection error and there are retry attempts left
       if (errorMessage.includes('Could not establish connection') && attempt < maxRetries) {
-        console.warn(`第${attempt}次尝试发送消息失败，等待后重试...`, errorMessage);
-        // 等待一段时间后重试
+        console.warn(
+          `Attempt ${attempt} to send message failed, waiting to retry...`,
+          errorMessage
+        );
+        // Wait for a while before retrying
         await new Promise(resolve => setTimeout(resolve, 500 * attempt));
         continue;
       }
 
-      // 其他错误或重试次数用完
+      // Other errors or retry attempts exhausted
       throw error;
     }
   }
 
-  throw new Error('达到最大重试次数，无法建立连接');
+  throw new Error('Maximum retry attempts reached, unable to establish connection');
 }
 
 async function createContextMenu() {
-  // 移除现有的上下文菜单项
+  // Remove existing context menu items
   chrome.contextMenus.removeAll();
 
-  // 创建保存表单菜单项
+  // Create save form menu item
   chrome.contextMenus.create({
     id: 'save-form',
-    title: '保存表单数据',
+    title: 'Save Form Data',
     contexts: ['page'],
     documentUrlPatterns: ['https://*/*', 'http://*/*'],
   });
 
-  // 创建恢复表单菜单项
+  // Create restore form menu item
   chrome.contextMenus.create({
     id: 'restore-form',
-    title: '恢复表单数据',
+    title: 'Restore Form Data',
     contexts: ['page'],
     documentUrlPatterns: ['https://*/*', 'http://*/*'],
   });
 
-  // 创建分隔线
+  // Create separator
   chrome.contextMenus.create({
     id: 'separator',
     type: 'separator',
     contexts: ['page'],
   });
 
-  // 创建管理表单菜单项
+  // Create manage forms menu item
   chrome.contextMenus.create({
     id: 'manage-forms',
-    title: '管理已保存表单',
+    title: 'Manage Saved Forms',
     contexts: ['page'],
   });
 }

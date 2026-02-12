@@ -202,7 +202,7 @@ onMounted(async () => {
   ])
 })
 
-// 加载设置
+// Load settings
 async function loadSettings() {
   try {
     const result = await chrome.storage.sync.get(['autoSaveEnabled', 'showNotifications'])
@@ -211,22 +211,22 @@ async function loadSettings() {
       showNotifications: result.showNotifications ?? true
     }
   } catch (error) {
-    console.error('加载设置失败:', error)
+    console.error('Failed to load settings:', error)
   }
 }
 
-// 保存设置
+// Save settings
 async function saveSettings() {
   try {
     await chrome.storage.sync.set(settings.value)
-    showMessage('设置已保存', 'success')
+    showMessage('Settings saved', 'success')
   } catch (error) {
-    console.error('保存设置失败:', error)
-    showMessage('保存设置失败', 'error')
+    console.error('Failed to save settings:', error)
+    showMessage('Failed to save settings', 'error')
   }
 }
 
-// 加载数据统计
+// Load data statistics
 async function loadDataStats() {
   try {
     const response = await sendMessageToBackground({
@@ -243,11 +243,11 @@ async function loadDataStats() {
       stats.value.storageSize = new Blob([jsonString]).size
     }
   } catch (error) {
-    console.error('加载数据统计失败:', error)
+    console.error('Failed to load data statistics:', error)
   }
 }
 
-// 加载已保存表单
+// Load saved forms
 async function loadSavedForms() {
   try {
     const response = await sendMessageToBackground({
@@ -258,11 +258,11 @@ async function loadSavedForms() {
       savedForms.value = response.forms
     }
   } catch (error) {
-    console.error('加载已保存表单失败:', error)
+    console.error('Failed to load saved forms:', error)
   }
 }
 
-// 导出数据
+// Export data
 async function exportData() {
   try {
     const data = {
@@ -282,21 +282,21 @@ async function exportData() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     
-    showMessage('数据导出成功', 'success')
+    showMessage('Data exported successfully', 'success')
   } catch (error) {
-    console.error('导出数据失败:', error)
-    showMessage('导出数据失败', 'error')
+    console.error('Failed to export data:', error)
+    showMessage('Failed to export data', 'error')
   }
 }
 
-// 清空所有数据
+// Clear all data
 async function clearAllData() {
-  if (!confirm('确定要清空所有保存的表单数据吗？此操作不可恢复！')) {
+  if (!confirm('Are you sure you want to clear all saved form data? This action cannot be undone!')) {
     return
   }
 
   try {
-    // 发送消息删除所有表单
+    // Send message to delete all forms
     const response = await sendMessageToBackground({
       type: 'CLEAR_ALL_FORMS'
     })
@@ -308,20 +308,20 @@ async function clearAllData() {
         totalFieldsCount: 0,
         storageSize: 0
       }
-      showMessage('所有数据已清空', 'success')
+      showMessage('All data cleared', 'success')
     } else {
-      showMessage('清空数据失败', 'error')
+      showMessage('Failed to clear data', 'error')
     }
   } catch (error) {
-    console.error('清空数据失败:', error)
-    showMessage('清空数据失败', 'error')
+    console.error('Failed to clear data:', error)
+    showMessage('Failed to clear data', 'error')
   }
 }
 
-// 恢复表单
+// Restore form
 async function restoreForm(url) {
   try {
-    // 切换到对应页面
+    // Switch to corresponding page
     const tabs = await chrome.tabs.query({ url: url })
     let tabId
     
@@ -333,7 +333,7 @@ async function restoreForm(url) {
       tabId = newTab.id
     }
 
-    // 等待页面加载完成后再恢复
+    // Wait for page to load completely before restoring
     setTimeout(async () => {
       try {
         const response = await chrome.tabs.sendMessage(tabId, {
@@ -341,7 +341,7 @@ async function restoreForm(url) {
         })
         
         if (response?.success) {
-          showMessage('表单恢复成功！', 'success')
+          showMessage('Form restored successfully!', 'success')
         }
       } catch (error) {
         console.error('恢复表单失败:', error)
@@ -349,14 +349,14 @@ async function restoreForm(url) {
     }, 1000)
 
   } catch (error) {
-    console.error('恢复表单失败:', error)
-    showMessage('恢复失败：' + error.message, 'error')
+    console.error('Failed to restore form:', error)
+    showMessage('Restore failed: ' + error.message, 'error')
   }
 }
 
-// 删除表单
+// Delete form
 async function deleteForm(url) {
-  if (!confirm('确定要删除这个保存的表单吗？')) {
+  if (!confirm('Are you sure you want to delete this saved form?')) {
     return
   }
 
@@ -367,25 +367,25 @@ async function deleteForm(url) {
     })
 
     if (response?.success) {
-      // 从列表中移除
+      // Remove from list
       const index = savedForms.value.findIndex(form => form.url === url)
       if (index !== -1) {
         savedForms.value.splice(index, 1)
       }
       
-      // 更新统计数据
+      // Update statistics
       await loadDataStats()
-      showMessage('删除成功！', 'success')
+      showMessage('Deleted successfully!', 'success')
     } else {
-      showMessage(response?.error || '删除失败', 'error')
+      showMessage(response?.error || 'Delete failed', 'error')
     }
   } catch (error) {
-    console.error('删除表单失败:', error)
-    showMessage('删除失败：' + error.message, 'error')
+    console.error('Failed to delete form:', error)
+    showMessage('Delete failed: ' + error.message, 'error')
   }
 }
 
-// 链接点击处理
+// Link click handlers
 function openHelp() {
   chrome.tabs.create({ url: 'https://github.com/your-repo/formsaver/wiki' })
 }
@@ -398,7 +398,7 @@ function openGithub() {
   chrome.tabs.create({ url: 'https://github.com/your-repo/formsaver' })
 }
 
-// 工具函数
+// Utility functions
 function getDomain(url) {
   try {
     return new URL(url).hostname
