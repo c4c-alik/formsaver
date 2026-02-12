@@ -23,7 +23,7 @@ export default defineConfig([
     },
     output: {
       dir: 'dist',
-      entryFileNames: '[name]/index.js',
+      entryFileNames: '[name]/main.js',
       chunkFileNames: 'shared/[name].js',
       assetFileNames: '[name]/[name].[ext]',
       format: 'es',
@@ -50,8 +50,20 @@ export default defineConfig([
       copy({
         targets: [
           { src: 'public/*', dest: 'dist' },
-          { src: 'src/popup/popup.html', dest: 'dist/popup' },
-          { src: 'src/options/options.html', dest: 'dist/options' },
+          {
+            src: 'src/popup/popup.html',
+            dest: 'dist/popup',
+            transform: contents => {
+              return contents.toString().replace(/\.ts"/g, '.js"');
+            },
+          },
+          {
+            src: 'src/options/options.html',
+            dest: 'dist/options',
+            transform: contents => {
+              return contents.toString().replace(/\.ts"/g, '.js"');
+            },
+          },
         ],
         hook: 'buildEnd',
       }),
