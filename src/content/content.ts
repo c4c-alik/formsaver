@@ -4,6 +4,8 @@ import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
 import { showNotification } from '../composables/notify';
 
+console.log('FormSaver content script loaded', 'Extension ID:', chrome.runtime.id);
+
 /**
  * Initialize after page load completes
  */
@@ -36,24 +38,10 @@ window.addEventListener('load', async () => {
   }
 });
 
-// Listen for keyboard shortcuts (optional feature)
-document.addEventListener('keydown', event => {
-  // Ctrl+Shift+S Save form
-  if (event.ctrlKey && event.shiftKey && event.key === 'S') {
-    event.preventDefault();
-    saveForm();
-  }
-
-  // Ctrl+Shift+R Restore form
-  if (event.ctrlKey && event.shiftKey && event.key === 'R') {
-    event.preventDefault();
-    restoreForm();
-  }
-});
-
 // Listen for messages from background script
-chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
-  handleMessage(message, sender, sendResponse);
+chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse) => {
+  console.log('Received message from background script:', message);
+  await handleMessage(message, sender, sendResponse);
   return true;
 });
 
@@ -93,9 +81,6 @@ async function handleMessage(
  */
 async function saveForm() {
   try {
-    // 显示加载状态
-    showNotification('Saving form...', 'info');
-
     // Directly collect and save form data
     const formData = FormCollector.collectFormData();
 
@@ -123,9 +108,6 @@ async function saveForm() {
  */
 async function restoreForm() {
   try {
-    // 显示加载状态
-    showNotification('Restoring form...', 'info');
-
     // Directly get form data from storage
     const formData = await StorageManager.getForm(window.location.href);
 

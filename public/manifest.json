@@ -4,9 +4,10 @@
   "version": "1.0.0",
   "description": "智能表单数据保存和恢复工具",
   "permissions": [
+    "tabs",
+    "activeTab",
     "storage",
     "unlimitedStorage",
-    "activeTab",
     "contextMenus",
     "notifications",
     "scripting"
