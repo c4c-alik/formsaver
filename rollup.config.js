@@ -6,6 +6,7 @@ import alias from '@rollup/plugin-alias';
 import vue from 'rollup-plugin-vue';
 import postcss from 'rollup-plugin-postcss';
 import copy from 'rollup-plugin-copy';
+import replace from '@rollup/plugin-replace';
 import { dirname, resolve as pathResolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -30,6 +31,10 @@ export default defineConfig([
       sourcemap: !isProduction,
     },
     plugins: [
+      replace({
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+        preventAssignment: true,
+      }),
       alias({
         entries: [{ find: '@', replacement: pathResolve(__dirname, 'src') }],
       }),
@@ -79,6 +84,10 @@ export default defineConfig([
       sourcemap: !isProduction,
     },
     plugins: [
+      replace({
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+        preventAssignment: true,
+      }),
       resolve({
         browser: true,
       }),
@@ -99,6 +108,10 @@ export default defineConfig([
       sourcemap: !isProduction,
     },
     plugins: [
+      replace({
+        'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+        preventAssignment: true,
+      }),
       resolve({
         browser: true,
       }),
