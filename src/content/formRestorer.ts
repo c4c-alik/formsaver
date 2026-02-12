@@ -1,4 +1,5 @@
 import { FormData, FormField } from './types';
+import { showNotification } from './utils';
 
 export class FormRestorer {
   /**
@@ -14,6 +15,7 @@ export class FormRestorer {
       return true;
     } catch (error) {
       console.error('Failed to restore form data:', error);
+      showNotification(`Failed to restore form data: ${(error as Error).message}`, 'error');
       return false;
     }
   }

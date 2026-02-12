@@ -18,23 +18,23 @@
               <span class="label-description">当检测到表单提交时自动保存数据</span>
             </label>
             <label class="switch">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 v-model="settings.autoSaveEnabled"
                 @change="saveSettings"
               >
               <span class="slider"></span>
             </label>
           </div>
-          
+
           <div class="setting-item">
             <label class="setting-label">
               <span class="label-text">显示通知</span>
               <span class="label-description">操作完成后显示桌面通知</span>
             </label>
             <label class="switch">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 v-model="settings.showNotifications"
                 @change="saveSettings"
               >
@@ -79,39 +79,39 @@
           <div class="table-container">
             <table class="table" v-if="savedForms.length > 0">
               <thead>
-                <tr>
-                  <th>表单名称</th>
-                  <th>域名</th>
-                  <th>保存时间</th>
-                  <th>字段数量</th>
-                  <th>操作</th>
-                </tr>
+              <tr>
+                <th>表单名称</th>
+                <th>域名</th>
+                <th>保存时间</th>
+                <th>字段数量</th>
+                <th>操作</th>
+              </tr>
               </thead>
               <tbody>
-                <tr v-for="form in savedForms" :key="form.url">
-                  <td>
-                    <div class="form-name" :title="form.name">{{ form.name }}</div>
-                  </td>
-                  <td>{{ getDomain(form.url) }}</td>
-                  <td>{{ formatDate(form.savedAt) }}</td>
-                  <td>{{ form.fieldsCount }}</td>
-                  <td>
-                    <div class="table-actions">
-                      <button 
-                        class="btn btn-secondary btn-small"
-                        @click="restoreForm(form.url)"
-                      >
-                        恢复
-                      </button>
-                      <button 
-                        class="btn btn-danger btn-small"
-                        @click="deleteForm(form.url)"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+              <tr v-for="form in savedForms" :key="form.url">
+                <td>
+                  <div class="form-name" :title="form.name">{{ form.name }}</div>
+                </td>
+                <td>{{ getDomain(form.url) }}</td>
+                <td>{{ formatDate(form.savedAt) }}</td>
+                <td>{{ form.fieldsCount }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button
+                      class="btn btn-secondary btn-small"
+                      @click="restoreForm(form.url)"
+                    >
+                      恢复
+                    </button>
+                    <button
+                      class="btn btn-danger btn-small"
+                      @click="deleteForm(form.url)"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
               </tbody>
             </table>
             <div v-else class="empty-state">
@@ -158,8 +158,8 @@
     </main>
 
     <!-- 消息提示 -->
-    <div 
-      v-for="message in messages" 
+    <div
+      v-for="message in messages"
       :key="message.id"
       class="message"
       :class="`message-${message.type}`"
@@ -170,12 +170,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useChromeExtension } from '../composables/useChromeExtension'
-import { useMessage } from '../composables/useMessage'
+import {onMounted, ref} from 'vue'
+import {useChromeExtension} from '../composables/useChromeExtension'
+import {useMessage} from '../composables/useMessage'
 
-const { sendMessageToBackground } = useChromeExtension()
-const { messages, showMessage } = useMessage()
+const {sendMessageToBackground} = useChromeExtension()
+const {messages, showMessage} = useMessage()
 
 // 响应式数据
 const settings = ref({
@@ -237,7 +237,7 @@ async function loadDataStats() {
       const forms = response.forms
       stats.value.savedFormsCount = forms.length
       stats.value.totalFieldsCount = forms.reduce((sum, form) => sum + form.fieldsCount, 0)
-      
+
       // 计算大致存储大小（简单估算）
       const jsonString = JSON.stringify(forms)
       stats.value.storageSize = new Blob([jsonString]).size
@@ -270,10 +270,10 @@ async function exportData() {
       settings: settings.value,
       exportDate: new Date().toISOString()
     }
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'})
     const url = URL.createObjectURL(blob)
-    
+
     const a = document.createElement('a')
     a.href = url
     a.download = `formsaver-export-${new Date().toISOString().split('T')[0]}.json`
@@ -281,7 +281,7 @@ async function exportData() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    
+
     showMessage('Data exported successfully', 'success')
   } catch (error) {
     console.error('Failed to export data:', error)
@@ -322,14 +322,14 @@ async function clearAllData() {
 async function restoreForm(url) {
   try {
     // Switch to corresponding page
-    const tabs = await chrome.tabs.query({ url: url })
+    const tabs = await chrome.tabs.query({url: url})
     let tabId
-    
+
     if (tabs.length > 0) {
       tabId = tabs[0].id
-      await chrome.tabs.update(tabId, { active: true })
+      await chrome.tabs.update(tabId, {active: true})
     } else {
-      const newTab = await chrome.tabs.create({ url: url })
+      const newTab = await chrome.tabs.create({url: url})
       tabId = newTab.id
     }
 
@@ -339,12 +339,13 @@ async function restoreForm(url) {
         const response = await chrome.tabs.sendMessage(tabId, {
           type: 'RESTORE_FORM'
         })
-        
+
         if (response?.success) {
           showMessage('Form restored successfully!', 'success')
         }
       } catch (error) {
-        console.error('恢复表单失败:', error)
+        console.error('Failed to restore form:', error)
+        showMessage(`Restore failed: ${error.message}`, 'error')
       }
     }, 1000)
 
@@ -363,7 +364,7 @@ async function deleteForm(url) {
   try {
     const response = await sendMessageToBackground({
       type: 'DELETE_FORM',
-      data: { url: url }
+      data: {url: url}
     })
 
     if (response?.success) {
@@ -372,7 +373,7 @@ async function deleteForm(url) {
       if (index !== -1) {
         savedForms.value.splice(index, 1)
       }
-      
+
       // Update statistics
       await loadDataStats()
       showMessage('Deleted successfully!', 'success')
@@ -387,15 +388,15 @@ async function deleteForm(url) {
 
 // Link click handlers
 function openHelp() {
-  chrome.tabs.create({ url: 'https://github.com/your-repo/formsaver/wiki' })
+  chrome.tabs.create({url: 'https://github.com/your-repo/formsaver/wiki'})
 }
 
 function reportIssue() {
-  chrome.tabs.create({ url: 'https://github.com/your-repo/formsaver/issues' })
+  chrome.tabs.create({url: 'https://github.com/your-repo/formsaver/issues'})
 }
 
 function openGithub() {
-  chrome.tabs.create({ url: 'https://github.com/your-repo/formsaver' })
+  chrome.tabs.create({url: 'https://github.com/your-repo/formsaver'})
 }
 
 // Utility functions
@@ -680,31 +681,31 @@ input:checked + .slider:before {
   .main {
     padding: 0 16px;
   }
-  
+
   .settings-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .actions-row {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .data-stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .shortcut-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .full-width {
     grid-column: 1;
   }
@@ -714,15 +715,15 @@ input:checked + .slider:before {
   .title {
     font-size: 24px;
   }
-  
+
   .card-title {
     font-size: 18px;
   }
-  
+
   .data-stats {
     grid-template-columns: 1fr;
   }
-  
+
   .links {
     flex-direction: column;
     gap: 8px;

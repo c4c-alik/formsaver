@@ -1,6 +1,21 @@
 import { Message } from '../content/types';
 import { StorageManager } from '../content/storageManager';
 
+// Extension notification function - for background context only
+function showExtensionNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  // Only show extension-level notifications for actual extension errors
+  // Page-level notifications should be handled in content scripts
+  if (type === 'error') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'assets/icon48.png',
+      title: 'FormSaver Error',
+      message: message,
+    });
+  }
+  // For success/info messages, rely on content script notifications
+}
+
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
   handleMessage(message, sender, sendResponse);
@@ -18,37 +33,39 @@ chrome.runtime.onInstalled.addListener(async () => {
   await StorageManager.migrateData();
 });
 
-// Listen for context menu clicks
+// Context menu click handlers
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab?.id) return;
 
   switch (info.menuItemId) {
     case 'save-form':
-      sendMessageToContentScript(tab.id, { type: 'SAVE_FORM' })
-        .then(response => {
-          console.log('Content script save response:', response);
+      // Directly inject and execute save functionality
+      chrome.scripting
+        .executeScript({
+          target: { tabId: tab.id },
+          func: saveFormDirect,
         })
         .catch(error => {
-          console.error('Failed to send save form message:', error);
-          // Show notification to user
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'assets/icon48.png',
-            title: 'FormSaver',
-            message: 'cannot save form: page may not support or loading',
-          });
+          console.error('Failed to execute save form:', error);
+          // Use unified notification method for critical errors
+          showExtensionNotification('Cannot save form: page may not support or loading', 'error');
         });
       break;
     case 'restore-form':
-      sendMessageToContentScript(tab.id, { type: 'RESTORE_FORM' }).catch(error => {
-        console.error('Failed to send restore form message:', error);
-        chrome.notifications.create({
-          type: 'basic',
-          iconUrl: 'assets/icon48.png',
-          title: 'FormSaver',
-          message: 'cannot restore form: page may not support or loading',
+      // Directly inject and execute restore functionality
+      chrome.scripting
+        .executeScript({
+          target: { tabId: tab.id },
+          func: restoreFormDirect,
+        })
+        .catch(error => {
+          console.error('Failed to execute restore form:', error);
+          // Use unified notification method for critical errors
+          showExtensionNotification(
+            'Cannot restore form: page may not support or loading',
+            'error'
+          );
         });
-      });
       break;
     case 'manage-forms':
       chrome.runtime.openOptionsPage();
@@ -71,6 +88,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       }
     } catch (error) {
       console.error('Error checking saved forms:', error);
+      // Use unified notification method
+      showExtensionNotification(`Error checking saved forms: ${(error as Error).message}`, 'error');
     }
   }
 });
@@ -95,6 +114,8 @@ async function handleMessage(
     }
   } catch (error) {
     console.error('Error handling message:', error);
+    // Use unified notification method
+    showExtensionNotification(`Error handling message: ${(error as Error).message}`, 'error');
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
@@ -119,6 +140,8 @@ async function handleGetSavedForms(
     sendResponse({ success: true, forms: formList });
   } catch (error) {
     console.error('Failed to get forms list:', error);
+    // Use unified notification method
+    showExtensionNotification(`Failed to get forms list: ${(error as Error).message}`, 'error');
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
@@ -147,61 +170,87 @@ async function handleDeleteForm(
     }
   } catch (error) {
     console.error('Failed to delete form:', error);
+    // Use unified notification method
+    showExtensionNotification(`Failed to delete form: ${(error as Error).message}`, 'error');
     sendResponse({ success: false, error: (error as Error).message });
   }
 }
 
-/**
- * Create context menu
- */
-/**
- * Wrapper function to send messages to content script with error handling and retry mechanism
- */
-async function sendMessageToContentScript(
-  tabId: number,
-  message: any,
-  maxRetries = 3
-): Promise<any> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // Check if tab exists and is accessible
-      const tab = await chrome.tabs.get(tabId);
-      if (!tab || !tab.url) {
-        throw new Error('Tab does not exist or URL is invalid');
-      }
+// Direct execution functions for content script injection
+function saveFormDirect() {
+  try {
+    // Collect form data directly
+    const forms = document.querySelectorAll('form');
+    if (forms.length === 0) {
+      // Directly call background notification function
+      showExtensionNotification('No forms found on current page', 'error');
+      return;
+    }
 
-      // Try to send message
-      const response = await new Promise((resolve, reject) => {
-        chrome.tabs.sendMessage(tabId, message, response => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(response);
+    // Simple form collection logic
+    const formData: any = {
+      url: window.location.href,
+      name: document.title,
+      savedAt: new Date().toISOString(),
+      formFields: [],
+    };
+
+    // Collect input values
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach((input: any) => {
+      if (input.value && input.name) {
+        formData.formFields.push({
+          name: input.name,
+          value: input.value,
+          type: input.type || input.tagName.toLowerCase(),
+        });
+      }
+    });
+
+    // Save to chrome storage and show notification directly
+    chrome.storage.local
+      .set({ [`form_${window.location.href}`]: formData })
+      .then(() => {
+        showExtensionNotification('Form saved successfully!', 'success');
+      })
+      .catch((error: any) => {
+        showExtensionNotification(`Save failed: ${error.message}`, 'error');
+      });
+  } catch (error: any) {
+    showExtensionNotification(`Save failed: ${error.message}`, 'error');
+  }
+}
+
+function restoreFormDirect() {
+  try {
+    // Get saved form data and show notification directly
+    chrome.storage.local
+      .get([`form_${window.location.href}`])
+      .then(result => {
+        const savedData = result[`form_${window.location.href}`];
+        if (!savedData) {
+          showExtensionNotification('No saved form data found', 'error');
+          return;
+        }
+
+        // Restore form values
+        savedData.formFields.forEach((field: any) => {
+          const element = document.querySelector(`[name="${field.name}"]`) as HTMLInputElement;
+          if (element && field.value) {
+            element.value = field.value;
+            // Trigger change event
+            element.dispatchEvent(new Event('change', { bubbles: true }));
           }
         });
+
+        showExtensionNotification('Form restored successfully!', 'success');
+      })
+      .catch((error: any) => {
+        showExtensionNotification(`Restore failed: ${error.message}`, 'error');
       });
-
-      return response;
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-
-      // If it's a connection error and there are retry attempts left
-      if (errorMessage.includes('Could not establish connection') && attempt < maxRetries) {
-        console.warn(
-          `Attempt ${attempt} to send message failed, waiting to retry...`,
-          errorMessage
-        );
-        // Wait for a while before retrying
-        await new Promise(resolve => setTimeout(resolve, 500 * attempt));
-        continue;
-      }
-
-      // Other errors or retry attempts exhausted
-      throw error;
-    }
+  } catch (error: any) {
+    showExtensionNotification(`Restore failed: ${error.message}`, 'error');
   }
-
-  throw new Error('Maximum retry attempts reached, unable to establish connection');
 }
 
 async function createContextMenu() {

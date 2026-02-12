@@ -272,7 +272,8 @@ async function restoreSpecificForm(url) {
           showMessage('Form restored successfully!', 'success')
         }
       } catch (error) {
-        console.error('恢复表单失败:', error)
+        console.error('Failed to restore form:', error)
+        showMessage(`Restore failed: ${error.message}`, 'error')
       }
     }, 1000)
 

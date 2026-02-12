@@ -2,13 +2,54 @@ import { Message } from './types';
 import { FormCollector } from './formCollector';
 import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
+import { showNotification } from './utils';
 
-console.log(
-  '🎯 Content script injected into page:',
-  window.location.href,
-  'Extension ID:',
-  chrome.runtime.id
-);
+/**
+ * Initialize after page load completes
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Can add page-specific initialization logic here
+  console.log('FormSaver content script loaded', 'Extension ID:', chrome.runtime.id);
+});
+
+// Check for saved forms after page fully loads
+window.addEventListener('load', async () => {
+  try {
+    // Check if current page has saved forms
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_SAVED_FORMS',
+    });
+
+    if (response?.success && response.forms) {
+      const currentUrlForms = response.forms.filter(
+        (form: any) => form.url === window.location.href
+      );
+
+      if (currentUrlForms.length > 0) {
+        // Can show a small hint to inform user about restorable forms
+        console.log(`Found ${currentUrlForms.length} restorable forms`);
+      }
+    }
+  } catch (error) {
+    console.error('Error checking saved forms:', error);
+    showNotification(`Error checking saved forms: ${(error as Error).message}`, 'error');
+  }
+});
+
+// Listen for keyboard shortcuts (optional feature)
+document.addEventListener('keydown', event => {
+  // Ctrl+Shift+S Save form
+  if (event.ctrlKey && event.shiftKey && event.key === 'S') {
+    event.preventDefault();
+    saveForm();
+  }
+
+  // Ctrl+Shift+R Restore form
+  if (event.ctrlKey && event.shiftKey && event.key === 'R') {
+    event.preventDefault();
+    restoreForm();
+  }
+});
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
@@ -68,15 +109,6 @@ async function saveForm() {
 
     if (success) {
       showNotification('Form saved successfully!', 'success');
-      // 可选：发送通知
-      chrome.runtime
-        .sendMessage({
-          type: 'FORM_SAVED',
-          data: { formName: formData.name },
-        })
-        .catch(() => {
-          // 忽略通知发送失败
-        });
     } else {
       showNotification('Save failed: Storage operation failed', 'error');
     }
@@ -113,15 +145,6 @@ async function restoreForm() {
 
     if (success) {
       showNotification('Form restored successfully!', 'success');
-      // optional: send notification
-      chrome.runtime
-        .sendMessage({
-          type: 'FORM_RESTORED',
-          data: { formName: formData.name },
-        })
-        .catch(() => {
-          // ignore notification sending failure
-        });
     } else {
       showNotification('Restore failed: Restore operation failed', 'error');
     }
@@ -130,96 +153,3 @@ async function restoreForm() {
     showNotification(`Restore failed: ${(error as Error).message}`, 'error');
   }
 }
-
-/**
- * Show in-page notification
- */
-function showNotification(message: string, type: 'success' | 'error' | 'info' = 'info') {
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 4px;
-    color: white;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    z-index: 10000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    max-width: 300px;
-    word-wrap: break-word;
-  `;
-
-  // Set styles based on type
-  switch (type) {
-    case 'success':
-      notification.style.backgroundColor = '#4CAF50';
-      break;
-    case 'error':
-      notification.style.backgroundColor = '#f44336';
-      break;
-    case 'info':
-      notification.style.backgroundColor = '#2196F3';
-      break;
-  }
-
-  notification.textContent = message;
-
-  // Add to page
-  document.body.appendChild(notification);
-
-  // Auto remove after 3 seconds
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
-    }
-  }, 3000);
-}
-
-/**
- * Initialize after page load completes
- */
-document.addEventListener('DOMContentLoaded', () => {
-  // Can add page-specific initialization logic here
-  console.log('FormSaver content script loaded');
-});
-
-// Check for saved forms after page fully loads
-window.addEventListener('load', async () => {
-  try {
-    // Check if current page has saved forms
-    const response = await chrome.runtime.sendMessage({
-      type: 'GET_SAVED_FORMS',
-    });
-
-    if (response?.success && response.forms) {
-      const currentUrlForms = response.forms.filter(
-        (form: any) => form.url === window.location.href
-      );
-
-      if (currentUrlForms.length > 0) {
-        // Can show a small hint to inform user about restorable forms
-        console.log(`Found ${currentUrlForms.length} restorable forms`);
-      }
-    }
-  } catch (error) {
-    console.error('Error checking saved forms:', error);
-  }
-});
-
-// Listen for keyboard shortcuts (optional feature)
-document.addEventListener('keydown', event => {
-  // Ctrl+Shift+S Save form
-  if (event.ctrlKey && event.shiftKey && event.key === 'S') {
-    event.preventDefault();
-    saveForm();
-  }
-
-  // Ctrl+Shift+R Restore form
-  if (event.ctrlKey && event.shiftKey && event.key === 'R') {
-    event.preventDefault();
-    restoreForm();
-  }
-});
