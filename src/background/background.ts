@@ -51,6 +51,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleGetSavedForms(message, sender, sendResponse);
       return true; // Keep message channel open for async response
 
+    case 'GET_TAB_ID':
+      handleGetTabId(message, sender, sendResponse);
+      return true;
+
     case 'DELETE_FORM':
       handleDeleteForm(message, sender, sendResponse);
       return true;
@@ -112,15 +116,15 @@ function showExtensionNotification(message: string, type: 'success' | 'error' | 
 async function handleGetSavedForms(
   message: Message,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  sendResponse: (response?: unknown) => void
 ) {
   try {
     const forms = await StorageManager.getAllForms();
-    const formList = Object.entries(forms).map(([url, formData]: [string, any]) => ({
+    const formList = Object.entries(forms).map(([url, formData]: [string, unknown]) => ({
       url,
-      name: formData.name,
-      savedAt: formData.savedAt,
-      fieldsCount: formData.formInfo.totalFields,
+      name: (formData as any).name,
+      savedAt: (formData as any).savedAt,
+      fieldsCount: (formData as any).formInfo?.totalFields,
     }));
 
     sendResponse({ success: true, forms: formList });
@@ -138,7 +142,7 @@ async function handleGetSavedForms(
 async function handleDeleteForm(
   message: Message,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  sendResponse: (response?: unknown) => void
 ) {
   try {
     const url = message.data?.url;
@@ -158,6 +162,30 @@ async function handleDeleteForm(
     console.error('Failed to delete form:', error);
     // Use unified notification method
     showExtensionNotification(`Failed to delete form: ${(error as Error).message}`, 'error');
+    sendResponse({ success: false, error: (error as Error).message });
+  }
+}
+
+/**
+ * Handle get tab ID request
+ */
+async function handleGetTabId(
+  message: Message,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: unknown) => void
+) {
+  try {
+    if (!sender.tab?.id) {
+      sendResponse({ success: false, error: 'Tab ID not found' });
+      return;
+    }
+
+    const tabId = sender.tab.id;
+    console.log('Tab ID requested, sending tabId:', tabId);
+
+    sendResponse({ success: true, tabId: tabId });
+  } catch (error) {
+    console.error('Failed to get tab ID:', error);
     sendResponse({ success: false, error: (error as Error).message });
   }
 }

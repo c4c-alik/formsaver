@@ -4,51 +4,76 @@ import { FormRestorer } from './formRestorer';
 import { StorageManager } from './storageManager';
 import { showNotification } from '../composables/notify';
 
-console.log('FormSaver content script loaded', 'Extension ID:', chrome.runtime.id);
+try {
+  console.log('FormSaver loading...', 'Extension ID:', chrome.runtime.id);
+
+  /**
+   * Initialize after page load completes
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Can add page-specific initialization logic here
+    console.log('FormSaver content script loaded', 'Extension ID:', chrome.runtime.id);
+  });
+
+  // Check for saved forms after page fully loads
+  window.addEventListener('load', async () => {
+    try {
+      // Check if current page has saved forms
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_SAVED_FORMS',
+      });
+
+      if (response?.success && response.forms) {
+        const currentUrlForms = response.forms.filter(
+          (form: { url: string }) => form.url === window.location.href
+        );
+
+        if (currentUrlForms.length > 0) {
+          // Can show a small hint to inform user about restorable forms
+          console.log(`Found ${currentUrlForms.length} restorable forms`);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking saved forms:', error);
+      showNotification(`Error checking saved forms: ${(error as Error).message}`, 'error');
+    }
+  });
+
+  // Listen for messages from background script
+  chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse) => {
+    console.log('Received message from background script:', message);
+    await handleMessage(message, sender, sendResponse);
+    return true;
+  });
+
+  // Get tabId from background
+  (async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'GET_TAB_ID',
+      });
+      if (!response || !response.success) {
+        throw new Error('Failed to get tabId');
+      }
+
+      console.log('FormSaver content script loaded success', 'tabId:', response.tabId);
+    } catch (error) {
+      console.error('Error getting tabId:', error);
+      showNotification(`Error getting tabId: ${(error as Error).message}`, 'error');
+    }
+  })();
+} catch (error) {
+  console.error('Error loading FormSaver:', error);
+  showNotification(`Error loading FormSaver: ${(error as Error).message}`, 'error');
+}
 
 /**
- * Initialize after page load completes
+ * Handle messages from background script
  */
-document.addEventListener('DOMContentLoaded', () => {
-  // Can add page-specific initialization logic here
-  console.log('FormSaver content script loaded', 'Extension ID:', chrome.runtime.id);
-});
-
-// Check for saved forms after page fully loads
-window.addEventListener('load', async () => {
-  try {
-    // Check if current page has saved forms
-    const response = await chrome.runtime.sendMessage({
-      type: 'GET_SAVED_FORMS',
-    });
-
-    if (response?.success && response.forms) {
-      const currentUrlForms = response.forms.filter(
-        (form: any) => form.url === window.location.href
-      );
-
-      if (currentUrlForms.length > 0) {
-        // Can show a small hint to inform user about restorable forms
-        console.log(`Found ${currentUrlForms.length} restorable forms`);
-      }
-    }
-  } catch (error) {
-    console.error('Error checking saved forms:', error);
-    showNotification(`Error checking saved forms: ${(error as Error).message}`, 'error');
-  }
-});
-
-// Listen for messages from background script
-chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse) => {
-  console.log('Received message from background script:', message);
-  await handleMessage(message, sender, sendResponse);
-  return true;
-});
-
 async function handleMessage(
   message: Message,
   sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: any) => void
+  sendResponse: (response?: unknown) => void
 ) {
   // Basic validation
   if (!message || !message.type) {
@@ -68,7 +93,7 @@ async function handleMessage(
         break;
 
       default:
-        sendResponse({ success: false, error: 'unknow message type' });
+        sendResponse({ success: false, error: 'unknown message type' });
     }
   } catch (error) {
     console.error('Error handling content script message:', error);
