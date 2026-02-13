@@ -43,10 +43,18 @@ export default defineConfig([
         extensions: ['.js', '.ts', '.vue'],
       }),
       commonjs(),
-      vue(),
       typescript({
         tsconfig: './tsconfig.json',
         declaration: false,
+      }),
+      vue({
+        // 添加Vue插件配置
+        template: {
+          isProduction,
+          compilerOptions: {
+            whitespace: 'condense',
+          },
+        },
       }),
       postcss({
         extract: true,
